@@ -1,0 +1,17 @@
+{
+  "name": "traderjs",
+  "version": "0.0.0",
+  "description": "Library of tools for trading",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Juan Antonio Aguilar",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "csvtojson": "~0.4.2"
+  }
+}

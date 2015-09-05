@@ -1,0 +1,65 @@
+"use strict"
+
+var EventEmitter = require('events').EventEmitter;
+var util = require('util');
+/**
+* @constructor
+* @name StockDataImport
+* @classdesc Implements an interface to load stock market data from CSV file
+* @property {string} name is a label for the object
+*/
+function StockDataImport(name){
+  var fs = require("fs");
+  var Converter = require("csvtojson").Converter;
+  this.name = name;
+  //inherits from EventEmitter
+  EventEmitter.call(this);  
+  var self = this;
+  /**
+  * @method 
+  * @name parse
+  * @description Emit an event with a data structure in JSON-array format with a CSV file of stock data parsed
+  * @param {string} file CSV file with stock data format
+  */
+  self.parse = function(file){
+    //checking file exists
+    if (!fs.existsSync(file)) throw "no file exists or path is incorrect."    
+    var fileStream = fs.createReadStream(file);
+    //new converter instance 
+    var param={delimiter: ';'};
+    var converter = new Converter(param);
+    //to store result JSON-Array
+    var result = {}
+
+    //end_parsed will be emitted once parsing finished 
+    converter.on("end_parsed", function (jsonObj) {
+      /**
+      * data event.
+      * @event StockDataImport#data
+      * @type {JSON}
+      */
+      self.emit('data',result);
+    });
+
+    converter.on("record_parsed",function(resultRow,rawRow,rowIndex){
+      for (var key in resultRow) {
+        if (typeof(resultRow[key]) == "string" && /^[+-]?\d+(,\d+)?$/.test(resultRow[key])){
+          resultRow[key] = parseFloat(resultRow[key].replace(',','.'));  
+        }
+        if (!result[key] || !result[key] instanceof Array) {
+            result[key] = [];
+        }
+        result[key][rowIndex] = resultRow[key];
+      }
+    });
+    //read from file 
+    fileStream.pipe(converter);
+  }
+  // EventEmitters inherit a single event listener, see it in action
+  //this.on('newListener', function(listener) {
+  //    console.log('Event Listener: ' + listener);
+  //});
+}
+//EventEmitter descendant
+util.inherits(StockDataImport, EventEmitter);
+module.exports = StockDataImport;
